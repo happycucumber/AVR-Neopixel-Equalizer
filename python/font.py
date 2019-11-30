@@ -5,7 +5,7 @@ from PIL import ImageDraw
 import numpy as np
 
 # font = ImageFont.truetype("Arial-Bold.ttf",14)
-font = ImageFont.truetype("arial.ttf",12)
+font = ImageFont.truetype("font/arial.ttf",12)
 f = open("array.txt", 'w')
 f.write('{')
 buf=0
@@ -18,7 +18,7 @@ for n in np.arange(17):
         draw.text((1, 1),str(n+1),(255),font=font)
     else:
         draw.text((1, 1), str(n + 16), (255), font=font)
-    img.save(""+str(n+1)+".bmp")
+    img.save("img/"+str(n+1)+".bmp")
     f.write('{')
     for l in np.arange(16):
         for m in np.arange(16):

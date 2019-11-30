@@ -7,7 +7,7 @@ import numpy as np
 f = open("animation.txt", 'w')
 f.write('{')
 for n in np.arange(9):
-    temp=Image.open(str(n+1)+'.png')
+    temp=Image.open('img/'+str(n+1)+'.png')
     img=temp.convert('RGB')
     pix=np.array(img)
     f.write('{')
