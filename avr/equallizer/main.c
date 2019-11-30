@@ -14,16 +14,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-static int USART0_putchar(char c, FILE *stream);
+/*
+//printf함수 사용을을위해 UART통신을 설정
+static int USART0_putchar(char c, FILE *stream); 
 static FILE device = FDEV_SETUP_STREAM(USART0_putchar, NULL, _FDEV_SETUP_WRITE);
+*/
 
 int count,i,j;		//loop용 변수
 int rs = 16;
 int brightness = 1;
 int position = 0;
 int mode = 0,state=0; //default: mode=0, state=0|mode:1=setting|state:조이스틱이벤트 감지(상하인지 좌우인지)
-int min=0,max=1000;
+int min=0,max=120;
+
+/*
+//printf함수 사용을을위해 UART통신을 설정
 
 void  uart0_init(void){
 	unsigned int baud=1;   // 초기 baud값을 "1"로 설정한다.
@@ -55,12 +60,11 @@ static int USART0_putchar(char c, FILE *stream){
 	return 0;
 
 }
-
+*/
 int map(int x, int in_min, int in_max, int out_min, int out_max)
 {
 	return (x-in_min)*(out_max-out_min)/(in_max-in_min)+out_min;
 }
-
 
 void Initial(void){ // ------ 초기화 함수 ---------------------------
 
@@ -225,8 +229,11 @@ void JoystickEvent(){
 void main(void){ // ========== >>> 메인 함수 <<< ========
 
 	Initial();				 // 포트 및 ADC초기화
+	/*
+	//printf함수 사용을을위해 UART통신을 설정
 	uart0_init();            // uart0를 초기화하고 설정한다.
 	stdout = &device;        //  device 를 stdout으로 설정한다
+	*/
 	_delay_ms(10);
 	Demo();
 	while(1){
@@ -234,8 +241,8 @@ void main(void){ // ========== >>> 메인 함수 <<< ========
 		JoystickEvent();
 		if(!mode){
 			int result[rs];
-			ADMUX = POTENTIOMETER;
-			max=Adc();
+			//ADMUX = POTENTIOMETER;
+			//max=Adc();
 			ADMUX = MIC_PIN;
 			for(count=0;count<FFT_N;count++){
 				capture[count] = Adc()-512; 		// AD 변환값 추가
