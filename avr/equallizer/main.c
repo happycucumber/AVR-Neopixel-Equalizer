@@ -14,15 +14,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
 /*
 //printf함수 사용을을위해 UART통신을 설정
-static int USART0_putchar(char c, FILE *stream); 
+static int USART0_putchar(char c, FILE *stream);
 static FILE device = FDEV_SETUP_STREAM(USART0_putchar, NULL, _FDEV_SETUP_WRITE);
 */
 
 int count,i,j;		//loop용 변수
 int rs = 16;
 int brightness = 1;
+int sensitivity = 1;
 int position = 0;
 int mode = 0,state=0; //default: mode=0, state=0|mode:1=setting|state:조이스틱이벤트 감지(상하인지 좌우인지)
 int min=0,max=120;
@@ -31,33 +33,33 @@ int min=0,max=120;
 //printf함수 사용을을위해 UART통신을 설정
 
 void  uart0_init(void){
-	unsigned int baud=1;   // 초기 baud값을 "1"로 설정한다.
-	baud = ((F_CPU+(BAUD_RATE*8L))/(BAUD_RATE*16L)-1);            //baud를 프로그램으로 계산 한다.
+unsigned int baud=1;   // 초기 baud값을 "1"로 설정한다.
+baud = ((F_CPU+(BAUD_RATE*8L))/(BAUD_RATE*16L)-1);            //baud를 프로그램으로 계산 한다.
 
-	UBRR0H=(unsigned char) (baud >>8);                                                       // baud 계산된 값으로  H레지스터 설정
-	UBRR0L=(unsigned char) (baud & 0xFF);                                                  // baud 계산된 값으로  L레지스트  설정
-	
-	UCSR0A = 0X00;                                                                                       // Asynchronous normal mode로 설정한다
-	// UCSR0A : RXC0,TXC0,UDRE0,FE0,DOR0,UPE0,U2X0,MPCM0;
+UBRR0H=(unsigned char) (baud >>8);                                                       // baud 계산된 값으로  H레지스터 설정
+UBRR0L=(unsigned char) (baud & 0xFF);                                                  // baud 계산된 값으로  L레지스트  설정
 
-	UCSR0B = 0X18;                                                                                       // Rx/Tx enable, 8bit Data 로 설정한다.
-	// UCSR0B : RXCIE0,TXCIE0,UDRIE0,RXEN0,TXEN0,UCSZ02,RXB80,TXB80
+UCSR0A = 0X00;                                                                                       // Asynchronous normal mode로 설정한다
+// UCSR0A : RXC0,TXC0,UDRE0,FE0,DOR0,UPE0,U2X0,MPCM0;
 
-	UCSR0C = 0X06;                                                                                       // 1 Stop bit, 8bit Data, No Parity 로 설정한다.
-	//UCSR0C : - , UMSEL0,UPM01,UPM00,USBS0,UCSZ01,UCSZ00,UCPOL0
+UCSR0B = 0X18;                                                                                       // Rx/Tx enable, 8bit Data 로 설정한다.
+// UCSR0B : RXCIE0,TXCIE0,UDRIE0,RXEN0,TXEN0,UCSZ02,RXB80,TXB80
+
+UCSR0C = 0X06;                                                                                       // 1 Stop bit, 8bit Data, No Parity 로 설정한다.
+//UCSR0C : - , UMSEL0,UPM01,UPM00,USBS0,UCSZ01,UCSZ00,UCPOL0
 }
 
 static int USART0_putchar(char c, FILE *stream){
-	if(c == '\n'){
-		loop_until_bit_is_set(UCSR0A,UDRE0);
-		UDR0 = 0x0D;
-		loop_until_bit_is_set(UCSR0A,UDRE0);
-		UDR0 = 0x0A;
-		}else{
-		loop_until_bit_is_set(UCSR0A,UDRE0);
-		UDR0 = c;
-	}
-	return 0;
+if(c == '\n'){
+loop_until_bit_is_set(UCSR0A,UDRE0);
+UDR0 = 0x0D;
+loop_until_bit_is_set(UCSR0A,UDRE0);
+UDR0 = 0x0A;
+}else{
+loop_until_bit_is_set(UCSR0A,UDRE0);
+UDR0 = c;
+}
+return 0;
 
 }
 */
@@ -71,7 +73,7 @@ void Initial(void){ // ------ 초기화 함수 ---------------------------
 	PORTF= 0x00 ;
 	DDRF = 0x00 ; 		// A/D1(PF.1) <-- 마이크
 	PORTE= 0xff ;
-	DDRE = 0xfe ;		//시리얼?
+	DDRE = 0xfe ;		//시리얼
 	PORTD= 0xff ;		// PD.0 : INT0
 	DDRD = 0x00 ;
 
@@ -104,15 +106,6 @@ void EqDisp(int *data){
 			led[(i+1)*32-1-j].r=color[j/2][0]==0?0:(color[j/2][0]*brightness-1);
 			led[(i+1)*32-1-j].g=color[j/2][1]==0?0:(color[j/2][1]*brightness-1);
 			led[(i+1)*32-1-j].b=color[j/2][2]==0?0:(color[j/2][2]*brightness-1);
-			/*
-			led[i*32+j].r=10;
-			led[i*32+j].g=0;
-			led[i*32+j].b=0;
-			
-			led[(i+1)*32-1-j].r=10;
-			led[(i+1)*32-1-j].g=0;
-			led[(i+1)*32-1-j].b=0;
-			*/
 		}
 	}
 	ws2812_setleds(led,LED_PIXEL);
@@ -193,14 +186,24 @@ void JoystickEvent(){
 	int temp;
 	ADMUX = JOYSTIC_UD_PIN;
 	temp=Adc();
-	if(temp<JOYSTICK_MIN&&brightness<16&&mode){
-		brightness++;
-		state=0;
-		_delay_ms(100);
-		}else if(temp>JOYSTICK_MAX&&brightness>1&&mode){
-		brightness--;
-		state=0;
-		_delay_ms(100);
+	if(mode){
+		if(temp<JOYSTICK_MIN&&brightness<16&&mode){
+			brightness++;
+			state=0;
+			_delay_ms(100);
+			}else if(temp>JOYSTICK_MAX&&brightness>1&&mode){
+			brightness--;
+			state=0;
+			_delay_ms(100);
+		}
+		}else{
+		if(temp<JOYSTICK_MIN&&sensitivity<11){
+			sensitivity++;
+			_delay_ms(100);
+			}else if(temp>JOYSTICK_MAX&&sensitivity>1){
+			sensitivity--;
+			_delay_ms(100);
+		}
 	}
 	ADMUX = JOYSTIC_LR_PIN;
 	temp=Adc();
@@ -262,7 +265,7 @@ void main(void){ // ========== >>> 메인 함수 <<< ========
 				for(j=0;j<FFT_N/rs;j++){
 					temp += spectrum[FFT_N/rs*i+j];
 				}
-				temp=map(temp,0,max*3,0,16);
+				temp=map(temp,0,sensitivity*100,0,16);
 				result[i]=temp<17?temp:16;
 			}
 			EqDisp(result);

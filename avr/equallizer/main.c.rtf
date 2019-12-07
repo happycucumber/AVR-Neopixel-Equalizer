@@ -1,0 +1,279 @@
+{\rtf1\ansi\uc0\deff0{\fonttbl{\f0\fmodern\fprq1\fcharset0;}}{\colortbl;\red0\green128\blue0;\red0\green0\blue255;\red43\green145\blue175;\red163\green21\blue21;\red255\green0\blue0;}\f0 {\cf1 /*\par
+* equallizer.c\par
+*\par
+* Created: 2019-11-06 {\u50724}{\u54980} 7:49:16\par
+* Author : klop8\par
+*/}\par
+\par
+{\cf2 #}{\cf2 include} {\cf1 <avr/io.h>}{\cf2 \par
+}{\cf2 #}{\cf2 include} {\cf1 "avr/iom128.h"}{\cf2 \par
+}{\cf2 #}{\cf2 include} {\cf1 "main.h"}{\cf2 \par
+}{\cf2 #}{\cf2 include} {\cf1 <avr/interrupt.h>}{\cf2 \par
+}{\cf2 #}{\cf2 include} {\cf1 <util/delay.h>}{\cf2 \par
+}{\cf2 #}{\cf2 include} {\cf1 <stdint.h>}{\cf2 \par
+}{\cf2 #}{\cf2 include} {\cf1 <stdio.h>}{\cf2 \par
+}{\cf2 #}{\cf2 include} {\cf1 <string.h>}{\cf2 \par
+}{\cf2 #}{\cf2 include} {\cf1 <stdlib.h>}{\cf2 \par
+}{\cf1 /*\par
+//printf{\u54632}{\u49688} {\u49324}{\u50857}{\u51012}{\u51012}{\u50948}{\u54644} UART{\u53685}{\u49888}{\u51012} {\u49444}{\u51221}\par
+static int USART0_putchar(char c, FILE *stream);\par
+static FILE device = FDEV_SETUP_STREAM(USART0_putchar, NULL, _FDEV_SETUP_WRITE);\par
+*/}\par
+\par
+{\cf3 int} count,i,j;		{\cf1 //loop{\u50857} {\u48320}{\u49688}\par
+}{\cf3 int} rs = 16;\par
+{\cf3 int} brightness = 1;\par
+{\cf3 int} position = 0;\par
+{\cf3 int} mode = 0,state=0; {\cf1 //default: mode=0, state=0|mode:1=setting|state:{\u51312}{\u51060}{\u49828}{\u54001}{\u51060}{\u48292}{\u53944} {\u44048}{\u51648}({\u49345}{\u54616}{\u51064}{\u51648} {\u51340}{\u50864}{\u51064}{\u51648})\par
+}{\cf3 int} min=0,max=120;\par
+\par
+{\cf1 /*\par
+//printf{\u54632}{\u49688} {\u49324}{\u50857}{\u51012}{\u51012}{\u50948}{\u54644} UART{\u53685}{\u49888}{\u51012} {\u49444}{\u51221}\par
+\par
+void  uart0_init(void)\{\par
+unsigned int baud=1;   // {\u52488}{\u44592} baud{\u44050}{\u51012} "1"{\u47196} {\u49444}{\u51221}{\u54620}{\u45796}.\par
+baud = ((F_CPU+(BAUD_RATE*8L))/(BAUD_RATE*16L)-1);            //baud{\u47484} {\u54532}{\u47196}{\u44536}{\u47016}{\u51004}{\u47196} {\u44228}{\u49328} {\u54620}{\u45796}.\par
+\par
+UBRR0H=(unsigned char) (baud >>8);                                                       // baud {\u44228}{\u49328}{\u46108} {\u44050}{\u51004}{\u47196}  H{\u47112}{\u51648}{\u49828}{\u53552} {\u49444}{\u51221}\par
+UBRR0L=(unsigned char) (baud & 0xFF);                                                  // baud {\u44228}{\u49328}{\u46108} {\u44050}{\u51004}{\u47196}  L{\u47112}{\u51648}{\u49828}{\u53944}  {\u49444}{\u51221}\par
+\par
+UCSR0A = 0X00;                                                                                       // Asynchronous normal mode{\u47196} {\u49444}{\u51221}{\u54620}{\u45796}\par
+// UCSR0A : RXC0,TXC0,UDRE0,FE0,DOR0,UPE0,U2X0,MPCM0;\par
+\par
+UCSR0B = 0X18;                                                                                       // Rx/Tx enable, 8bit Data {\u47196} {\u49444}{\u51221}{\u54620}{\u45796}.\par
+// UCSR0B : RXCIE0,TXCIE0,UDRIE0,RXEN0,TXEN0,UCSZ02,RXB80,TXB80\par
+\par
+UCSR0C = 0X06;                                                                                       // 1 Stop bit, 8bit Data, No Parity {\u47196} {\u49444}{\u51221}{\u54620}{\u45796}.\par
+//UCSR0C : - , UMSEL0,UPM01,UPM00,USBS0,UCSZ01,UCSZ00,UCPOL0\par
+\}\par
+\par
+static int USART0_putchar(char c, FILE *stream)\{\par
+if(c == '\\n')\{\par
+loop_until_bit_is_set(UCSR0A,UDRE0);\par
+UDR0 = 0x0D;\par
+loop_until_bit_is_set(UCSR0A,UDRE0);\par
+UDR0 = 0x0A;\par
+\}else\{\par
+loop_until_bit_is_set(UCSR0A,UDRE0);\par
+UDR0 = c;\par
+\}\par
+return 0;\par
+\par
+\}\par
+*/}\par
+{\cf3 int} map({\cf3 int} x, {\cf3 int} in_min, {\cf3 int} in_max, {\cf3 int} out_min, {\cf3 int} out_max)\par
+\{\par
+	{\cf2 return} (x-in_min)*(out_max-out_min)/(in_max-in_min)+out_min;\par
+\}\par
+\par
+{\cf3 void} Initial({\cf3 void})\{ {\cf1 // ------ {\u52488}{\u44592}{\u54868} {\u54632}{\u49688} ---------------------------\par
+}\par
+	PORTF= 0x00 ;\par
+	DDRF = 0x00 ; 		{\cf1 // A/D1(PF.1) <-- {\u47560}{\u51060}{\u53356}\par
+}	PORTE= 0xff ;\par
+	DDRE = 0xfe ;		{\cf1 //{\u49884}{\u47532}{\u50620}?\par
+}	PORTD= 0xff ;		{\cf1 // PD.0 : INT0\par
+}	DDRD = 0x00 ;\par
+\par
+	_delay_ms(10);\par
+\par
+	ADCSRA = 0x86;		{\cf1 // (1000 0110) ADC enable, 128{\u48516}{\u51452}(125kHz), resolution:10bit\par
+}	{\cf1 //ADMUX = 0x41;		// {\u44592}{\u51456}{\u51204}{\u50517} = AVCC(+5V), select {\u52292}{\u45328} ADC1\par
+}	_delay_us(150);\par
+	\par
+\}\par
+\par
+{\cf3 int} Adc({\cf3 void})\{	 {\cf1 // ========== >>> AD {\u48320}{\u54872} {\u54632}{\u49688} <<< ======\par
+}	ADCSRA = 0xD5;	        {\cf1 // A/D {\u48320}{\u54872}{\u49884}{\u51089} {\u48143} clear ADIF\par
+}	{\cf2 while}( (ADCSRA & 0x10) == 0 );  {\cf1 // {\u48320}{\u54872} {\u50756}{\u47308}{\u44620}{\u51648} {\u45824}{\u44592}\par
+}	{\cf2 return} ({\cf3 int})ADCL + (({\cf3 int})ADCH << 8);\par
+\}\par
+{\cf3 void} EqDisp({\cf3 int} *data)\{\par
+	{\cf2 for}(i=0;i<256;i++)\{\par
+		led[i].r=0;\par
+		led[i].g=0;\par
+		led[i].b=0;\par
+	\}\par
+	{\cf2 for}(i=0;i<8;i++)\{\par
+		{\cf2 for}(j=0;j<data[position+i];j++)\{\par
+			\par
+			led[i*32+j].r=color[j/2][0]==0?0:(color[j/2][0]*brightness-1);\par
+			led[i*32+j].g=color[j/2][1]==0?0:(color[j/2][1]*brightness-1);\par
+			led[i*32+j].b=color[j/2][2]==0?0:(color[j/2][2]*brightness-1);\par
+			\par
+			led[(i+1)*32-1-j].r=color[j/2][0]==0?0:(color[j/2][0]*brightness-1);\par
+			led[(i+1)*32-1-j].g=color[j/2][1]==0?0:(color[j/2][1]*brightness-1);\par
+			led[(i+1)*32-1-j].b=color[j/2][2]==0?0:(color[j/2][2]*brightness-1);\par
+			{\cf1 /*\par
+			led[i*32+j].r=10;\par
+			led[i*32+j].g=0;\par
+			led[i*32+j].b=0;\par
+			\par
+			led[(i+1)*32-1-j].r=10;\par
+			led[(i+1)*32-1-j].g=0;\par
+			led[(i+1)*32-1-j].b=0;\par
+			*/}\par
+		\}\par
+	\}\par
+	ws2812_setleds(led,LED_PIXEL);\par
+\}\par
+{\cf3 void} Display({\cf3 int} num)\{\par
+	{\cf2 for}(i=0;i<256;i++)\{\par
+		led[i].r=0;\par
+		led[i].g=0;\par
+		led[i].b=0;\par
+	\}\par
+	{\cf3 int} n=num<17?num-1:16;\par
+	{\cf2 for}(i=0;i<16;i++)\{\par
+		{\cf2 for}(j=0;j<16;j++)\{\par
+			{\cf3 int} temp;\par
+			temp=(screenData[n][i]&bit[j])>>j;\par
+			{\cf2 if}(temp==1)\{\par
+				{\cf2 if}(j%2==0)\{\par
+					led[240-16*j+i].r=brightness*16-1;\par
+					led[240-16*j+i].g=brightness*16-1;\par
+					led[240-16*j+i].b=brightness*16-1;\par
+					\}{\cf2 else}\{\par
+					led[255-16*j-i].r=brightness*16-1;\par
+					led[255-16*j-i].g=brightness*16-1;\par
+					led[255-16*j-i].b=brightness*16-1;\par
+					\par
+				\}\par
+			\}\par
+		\}\par
+	\}\par
+	ws2812_setleds(led,LED_PIXEL);\par
+\}\par
+{\cf3 void} Demo()\{\par
+	{\cf3 int} demoState=1;\par
+	{\cf3 int} k;\par
+	{\cf2 while}(demoState)\{\par
+		{\cf2 for}(i=0;i<9;i++)\{\par
+			{\cf2 for}(j=0;j<16;j++)\{\par
+				{\cf2 for}(k=0;k<16;k++)\{\par
+					{\cf2 if}(PIND&0x01)\{\par
+						_delay_ms(1);\par
+						{\cf2 if}(PIND&0x01)\{\par
+							mode = 0;\par
+							i=9;\par
+							j=256;\par
+							demoState=0;\par
+							_delay_ms(100);\par
+							\par
+						\}\par
+					\}\par
+					{\cf2 if}(k%2==0)\{\par
+						led[240-16*k+j].r=demo[i][j*16+k][0]/8;\par
+						led[240-16*k+j].g=demo[i][j*16+k][1]/8;\par
+						led[240-16*k+j].b=demo[i][j*16+k][2]/8;\par
+						\}{\cf2 else}\{\par
+						led[255-16*k-j].r=demo[i][j*16+k][0]/8;\par
+						led[255-16*k-j].g=demo[i][j*16+k][1]/8;\par
+						led[255-16*k-j].b=demo[i][j*16+k][2]/8;\par
+						\par
+					\}\par
+				\}\par
+			\}\par
+			ws2812_setleds(led,256);\par
+			_delay_ms(1000);\par
+		\}\par
+	\}\par
+\}\par
+{\cf3 void} ButtonEvent()\{\par
+	{\cf2 if}(PIND&0x01)\{\par
+		_delay_ms(1);\par
+		{\cf2 if}(PIND&0x01)\{\par
+			mode =  mode==1 ? 0 : 1;\par
+			_delay_ms(200);\par
+		\}\par
+	\}\par
+\}\par
+\par
+{\cf3 void} JoystickEvent()\{\par
+	{\cf3 int} temp;\par
+	ADMUX = JOYSTIC_UD_PIN;\par
+	temp=Adc();\par
+	{\cf2 if}(temp<JOYSTICK_MIN&&brightness<16&&mode)\{\par
+		brightness++;\par
+		state=0;\par
+		_delay_ms(100);\par
+		\}{\cf2 else} {\cf2 if}(temp>JOYSTICK_MAX&&brightness>1&&mode)\{\par
+		brightness--;\par
+		state=0;\par
+		_delay_ms(100);\par
+	\}\par
+	ADMUX = JOYSTIC_LR_PIN;\par
+	temp=Adc();\par
+	{\cf2 if}(mode)\{\par
+		{\cf2 if}(temp<JOYSTICK_MIN && rs<64)\{\par
+			rs*=2;\par
+			state=1;\par
+			_delay_ms(100);\par
+			\}{\cf2 else} {\cf2 if}(temp>JOYSTICK_MAX&&rs>16)\{\par
+			rs/=2;\par
+			state=1;\par
+			_delay_ms(100);\par
+		\}\par
+		\}{\cf2 else}\{\par
+		{\cf2 if}(temp<JOYSTICK_MIN&&position<(rs/2-8))\{\par
+			position++;\par
+			_delay_ms(50);\par
+			\}{\cf2 else} {\cf2 if}(temp>JOYSTICK_MAX&&position>0)\{\par
+			position--;\par
+			_delay_ms(100);\par
+		\}\par
+	\}\par
+\par
+\}\par
+\par
+{\cf3 void} main({\cf3 void})\{ {\cf1 // ========== >>> {\u47700}{\u51064} {\u54632}{\u49688} <<< ========\par
+}\par
+	Initial();				 {\cf1 // {\u54252}{\u53944} {\u48143} ADC{\u52488}{\u44592}{\u54868}\par
+}	{\cf1 /*\par
+	//printf{\u54632}{\u49688} {\u49324}{\u50857}{\u51012}{\u51012}{\u50948}{\u54644} UART{\u53685}{\u49888}{\u51012} {\u49444}{\u51221}\par
+	uart0_init();            // uart0{\u47484} {\u52488}{\u44592}{\u54868}{\u54616}{\u44256} {\u49444}{\u51221}{\u54620}{\u45796}.\par
+	stdout = &device;        //  device {\u47484} stdout{\u51004}{\u47196} {\u49444}{\u51221}{\u54620}{\u45796}\par
+	*/}\par
+	_delay_ms(10);\par
+	Demo();\par
+	{\cf2 while}(1)\{\par
+		ButtonEvent();\par
+		JoystickEvent();\par
+		{\cf2 if}(!mode)\{\par
+			{\cf3 int} result[rs];\par
+			{\cf1 //ADMUX = POTENTIOMETER;\par
+}			{\cf1 //max=Adc();\par
+}			ADMUX = MIC_PIN;\par
+			{\cf2 for}(count=0;count<FFT_N;count++)\{\par
+				capture[count] = Adc()-512; 		{\cf1 // AD {\u48320}{\u54872}{\u44050} {\u52628}{\u44032}\par
+}				_delay_us(SEC_PER_SAMPLE);\par
+			\}{\cf1 //end for\par
+}			\par
+			{\cf1 // Compute the FFT\par
+}			fft_input(capture, bfly_buff);   {\cf1 // Samples -> complex #s\par
+}			fft_execute(bfly_buff);          {\cf1 // Process complex data\par
+}			fft_output(bfly_buff, spectrum); {\cf1 // Complex -> spectrum\par
+}			\par
+			{\cf1 // Print the results\par
+}			spectrum[0]=0;spectrum[1]=0;\par
+			\par
+			{\cf2 for}(i=0;i<rs;i++)\{\par
+				{\cf3 int} temp=0;\par
+				{\cf2 for}(j=0;j<FFT_N/rs;j++)\{\par
+					temp += spectrum[FFT_N/rs*i+j];\par
+				\}\par
+				temp=map(temp,0,max*3,0,16);\par
+				result[i]=temp<17?temp:16;\par
+			\}\par
+			EqDisp(result);\par
+			\}{\cf2 else}\{\par
+			{\cf2 if}(!state)\{\par
+				Display(brightness);\par
+				\}{\cf2 else}\{\par
+				Display(rs/2);\par
+			\}\par
+		\}\par
+		_delay_ms(33);\par
+	\}\par
+\}\par
+}
