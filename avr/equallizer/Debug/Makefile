@@ -66,8 +66,7 @@ ADDITIONAL_DEPENDENCIES:=
 
 OUTPUT_FILE_DEP:= ./makedep.mk
 
-LIB_DEP+=  \
-C:/Users/klop8/Documents/Atmel\ Studio/7.0/ws2812-master/ffft/Debug/libffft.a
+LIB_DEP+= 
 
 LINKER_SCRIPT_DEP+= 
 

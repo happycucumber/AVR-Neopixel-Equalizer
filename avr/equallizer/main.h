@@ -17,9 +17,8 @@
 #define LED_PIXEL  256
 #define JOYSTICK_MIN 361
 #define JOYSTICK_MAX 873
-#define JOYSTIC_UD_PIN 0x43 //ADC4
-#define JOYSTIC_LR_PIN 0x44 //ADC3
-#define POTENTIOMETER 0x42 //ADC2
+#define JOYSTIC_UD_PIN 0x43 //ADC3
+#define JOYSTIC_LR_PIN 0x44 //ADC4
 #define MIC_PIN   0x41 //ADC1
 
 int16_t capture[FFT_N];          // Audio capture buffer
