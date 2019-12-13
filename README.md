@@ -3,10 +3,10 @@ Neopixel ws2812 ledpanel + atmega128 + joystick + MIC sensor<br>
 atmega128보드 ,네오픽셀(ws2812), 사운드 센서를 이용한 이퀄라이저
 
 # Function
-Sensitivity setting
-X axis move control
-Brightness setting
-Set FFT Data Count
+Sensitivity setting</br>
+X axis move control</br>
+Brightness setting</br>
+Set FFT Data Count</br>
 
 # FUSEBIT
 EXTENDED : 0xFF<br>
