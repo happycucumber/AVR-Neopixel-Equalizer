@@ -244,8 +244,6 @@ void main(void){ // ========== >>> 메인 함수 <<< ========
 		JoystickEvent();
 		if(!mode){
 			int result[rs];
-			//ADMUX = POTENTIOMETER;
-			//max=Adc();
 			ADMUX = MIC_PIN;
 			for(count=0;count<FFT_N;count++){
 				capture[count] = Adc()-512; 		// AD 변환값 추가
