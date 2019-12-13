@@ -19,13 +19,13 @@ Ext.16MHz Crystal,16MHz,4ms
 |PB2|Di|Neopixel 16x16|
 
 # Parts
-* [Atmega128 Development Board](http://www.newtc.co.kr/dpshop/shop/item.php?it_id=1314599855)
+* [Atmega128 Development Board](http://www.newtc.co.kr/dpshop/shop/item.php?it_id=1314599855)</br>
 ![atmega128](./img/atmega128.jpg)
-* [Neopixel](http://www.devicemart.co.kr/goods/view?no=1328622)
+* [Neopixel](http://www.devicemart.co.kr/goods/view?no=1328622)</br>
 ![neopixel](./img/neopixel.jpg)
-* [Joystick](http://www.devicemart.co.kr/goods/view?no=10916338)
+* [Joystick](http://www.devicemart.co.kr/goods/view?no=10916338)</br>
 ![neopixel](./img/joystick.gif)
-* [Sound sensor](http://www.devicemart.co.kr/goods/view?no=28451)
+* [Sound sensor](http://www.devicemart.co.kr/goods/view?no=28451)</br>
 ![neopixel](./img/sensor.jpg)
 
 # CODE
